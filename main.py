@@ -19,5 +19,11 @@ data_test = MNIST('./data/mnist',
                       transforms.ToTensor()]))
 dataloader_train = DataLoader(
     data_train, batch_size=256, shuffle=True, num_workers=8)
-dataloader_test = DataLoader(
-    data_test, batch_size=1024, num_workers=8)
+dataloader_test = DataLoader(data_test, batch_size=1024, num_workers=8)
+
+net = LeNet5()
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(net.parameters(), lr=2e-3)
+
+use_cuda = torch.cuda.is_available()
+device = torch.device("cuda:0" if use_cuda else "cpu")

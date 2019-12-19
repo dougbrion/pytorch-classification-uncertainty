@@ -1,6 +1,9 @@
 # VS code
 .vscode
 
+# data
+data/mnist/MNIST
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

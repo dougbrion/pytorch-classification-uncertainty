@@ -1,14 +1,16 @@
 # Evidential Deep Learning to Quantify Classification Uncertainty
 
-This repository contains a PyTorch implementation of the paper below.
+The purpose of this page is to provide an easy-to-run demo using PyTorch with low computational requirements for the ideas proposed in the paper *Evidential Deep Learning to Quantify Classification Uncertainty*. The authors of the paper originally used Tensorflow in their implementation.
+
+The paper can be accessed over at: [http://arxiv.org/abs/1806.01768](http://arxiv.org/abs/1806.01768)
 
 Part of: [Advances in Neural Information Processing Systems 31 (NIPS 2018)](https://papers.nips.cc/book/advances-in-neural-information-processing-systems-31-2018)
 
 ## Authors
 
-- Murat Sensoy
-- Lance Kaplan
-- Melih Kandemir
+- [Murat Sensoy](https://papers.nips.cc/author/murat-sensoy-11083)
+- [Lance Kaplan](https://papers.nips.cc/author/lance-kaplan-11084)
+- [Melih Kandemir](https://papers.nips.cc/author/melih-kandemir-11085)
 
 ## Abstract
 

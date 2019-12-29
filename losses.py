@@ -1,6 +1,6 @@
 import torch
 import torch.nn.functional as F
-from helpers
+from helpers import get_device
 
 
 def relu_evidence(y):
@@ -13,12 +13,6 @@ def exp_evidence(y):
 
 def softplus_evidence(y):
     return F.softplus(y)
-
-
-def get_device():
-    use_cuda = torch.cuda.is_available()
-    device = torch.device("cuda:0" if use_cuda else "cpu")
-    return device
 
 
 def kl_divergence(alpha, num_classes, device=None):

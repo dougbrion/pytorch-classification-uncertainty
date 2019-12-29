@@ -1,32 +1,21 @@
 import torch.nn as nn
+import torch.nn.functional as F
 from collections import OrderedDict
 
 
-class LeNet5(nn.Module):
-
+class LeNet(nn.Module):
     def __init__(self):
         super().__init__()
+        self.conv1 = nn.Conv2d(1, 20, kernel_size=5)
+        self.conv2 = nn.Conv2d(20, 50, kernel_size=5)
+        self.fc1 = nn.Linear(800, 500)
+        self.fc2 = nn.Linear(500, 10)
 
-        self.convnet = nn.Sequential(OrderedDict([
-            ('c1', nn.Conv2d(1, 6, kernel_size=(5, 5))),
-            ('relu1', nn.ReLU()),
-            ('s2', nn.MaxPool2d(kernel_size=(2, 2), stride=2)),
-            ('c3', nn.Conv2d(6, 16, kernel_size=(5, 5))),
-            ('relu3', nn.ReLU()),
-            ('s4', nn.MaxPool2d(kernel_size=(2, 2), stride=2)),
-            ('c5', nn.Conv2d(16, 120, kernel_size=(5, 5))),
-            ('relu5', nn.ReLU())
-        ]))
-
-        self.fc = nn.Sequential(OrderedDict([
-            ('f6', nn.Linear(120, 84)),
-            ('relu6', nn.ReLU()),
-            ('f7', nn.Linear(84, 10)),
-            ('sig7', nn.LogSoftmax(dim=-1))
-        ]))
-
-    def forward(self, img):
-        output = self.convnet(img)
-        output = output.view(img.size(0), -1)
-        output = self.fc(output)
-        return output
+    def forward(self, x):
+        x = F.relu(F.max_pool2d(self.conv1(x), 2))
+        x = F.relu(F.max_pool2d(self.conv2(x), 2))
+        x = x.view(x.size()[0], -1)
+        x = F.relu(self.fc1(x))
+        # x = F.dropout(x, training=self.training)
+        x = self.fc2(x)
+        return x

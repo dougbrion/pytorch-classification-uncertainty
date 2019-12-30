@@ -1,5 +1,3 @@
-import sys
-from lenet import LeNet
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -9,14 +7,15 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 
-
+import numpy as np
 from matplotlib import pyplot as plt
+
 from helpers import get_device, rotate_img, one_hot_embedding
 from data import dataloaders, digit_one
 from train import train_model
 from test import rotating_image_classification
 from losses import uncertainty_loss, relu_evidence
-import numpy as np
+from lenet import LeNet
 
 
 def main():

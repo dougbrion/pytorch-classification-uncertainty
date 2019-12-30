@@ -1,11 +1,12 @@
 import torch
+import torch.nn as nn
 import copy
 import time
-from helpers import get_device
+from helpers import get_device, one_hot_embedding
 
 
 def train_model(model, dataloaders, num_classes, criterion, optimizer, scheduler=None,
-                num_epochs=25, device=None):
+                num_epochs=25, device=None, uncertainty=False):
 
     since = time.time()
 
@@ -49,9 +50,31 @@ def train_model(model, dataloaders, num_classes, criterion, optimizer, scheduler
                 # track history if only in train
                 with torch.set_grad_enabled(phase == "train"):
 
-                    outputs = model(inputs)
-                    _, preds = torch.max(outputs, 1)
-                    loss = criterion(outputs, labels)
+                    if uncertainty:
+                        y = one_hot_embedding(labels)
+                        y = y.to(device)
+                        outputs = model(inputs)
+                        _, preds = torch.max(outputs, 1)
+                        loss, evidence = criterion(
+                            outputs, y.float(), epoch, num_classes, 10, device)
+                        match = torch.reshape(torch.eq(
+                            preds, labels).float(), (-1, 1))
+                        acc = torch.mean(match)
+
+                        alpha = evidence + 1
+                        u = num_classes / torch.sum(alpha, dim=1, keepdim=True)
+
+                        total_evidence = torch.sum(evidence, 1, keepdim=True)
+                        mean_evidence = torch.mean(total_evidence)
+                        mean_evidence_succ = torch.sum(
+                            torch.sum(evidence, 1, keepdim=True) * match) / torch.sum(match + 1e-20)
+                        mean_evidence_fail = torch.sum(
+                            torch.sum(evidence, 1, keepdim=True) * (1 - match)) / (torch.sum(torch.abs(1 - match)) + 1e-20)
+
+                    else:
+                        outputs = model(inputs)
+                        _, preds = torch.max(outputs, 1)
+                        loss = criterion(outputs, labels)
 
                     if phase == "train":
                         loss.backward()
@@ -101,6 +124,9 @@ def train_model(model, dataloaders, num_classes, criterion, optimizer, scheduler
         "optimizer_state_dict": optimizer.state_dict(),
         "loss": epoch_loss,
     }
-    torch.save(state, "./results/saved_model.pt")
+    if uncertainty:
+        torch.save(state, "./results/uncertainty_model.pt")
+    else:
+        torch.save(state, "./results/model.pt")
 
     return model, metrics

@@ -1,3 +1,7 @@
+# Torch
+*.pt
+*.pth
+
 # VS code
 .vscode
 

@@ -37,6 +37,8 @@ def kl_divergence(alpha, num_classes, device=None):
 def loglikelihood_loss(y, alpha, device=None):
     if not device:
         device = get_device()
+    y = y.to(device)
+    alpha = alpha.to(device)
     S = torch.sum(alpha, dim=1, keepdim=True)
     loglikelihood_err = torch.sum(
         (y - (alpha / S)) ** 2, dim=1, keepdim=True)
@@ -49,7 +51,8 @@ def loglikelihood_loss(y, alpha, device=None):
 def mse_loss(y, alpha, epoch_num, num_classes, annealing_step, device=None):
     if not device:
         device = get_device()
-
+    y = y.to(device)
+    alpha = alpha.to(device)
     loglikelihood = loglikelihood_loss(y, alpha, device=device)
 
     annealing_coef = torch.min(torch.tensor(
@@ -66,9 +69,25 @@ def uncertainty_loss(output, target, epoch_num, num_classes, annealing_step, dev
         device = get_device()
     evidence = relu_evidence(output)
     alpha = evidence + 1
-    u = num_classes / torch.sum(alpha, dim=1, keepdim=True)
     prob = alpha / torch.sum(alpha, dim=1, keepdim=True)
     loss = torch.mean(mse_loss(target, alpha, epoch_num,
                                num_classes, annealing_step, device=device))
-    l2_loss = F.mse_loss(output, target) * 0.005
+    l2_loss = F.mse_loss(output, target) * 0.5 * 0.005
     return loss + l2_loss, evidence
+
+
+def loss_EDL(func):
+    def loss_func(p, alpha, global_step, annealing_step):
+        S = torch.sum(alpha, dim=1, keepdim=True)
+
+        A = torch.sum(p * (func(S) - func(alpha)), dim=1, keepdim=True)
+
+        annealing_coef = torch.min(torch.tensor(
+            1.0, dtype=torch.float32), torch.tensor(epoch_num / annealing_step, dtype=torch.float32))
+
+        kl_alpha = (alpha - 1) * (1 - y) + 1
+        kl_div = annealing_coef * \
+            kl_divergence(kl_alpha, num_classes, device=device)
+
+        return (A + kl_div)
+    return loss_func

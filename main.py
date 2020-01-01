@@ -15,7 +15,7 @@ from helpers import get_device, rotate_img, one_hot_embedding
 from data import dataloaders, digit_one
 from train import train_model
 from test import rotating_image_classification
-from losses import uncertainty_loss, relu_evidence
+from losses import edl_mse_loss, edl_digamma_loss, edl_log_loss, relu_evidence
 from lenet import LeNet
 
 
@@ -29,6 +29,12 @@ def main():
     parser.add_argument("--dropout", action="store_true",
                         help="Use dropout or not")
     parser.add_argument("--uncertainty", action="store_true",
+                        help="Use uncertainty or not")
+    parser.add_argument("--mse", action="store_true",
+                        help="Use uncertainty or not")
+    parser.add_argument("--digamma", action="store_true",
+                        help="Use uncertainty or not")
+    parser.add_argument("--log", action="store_true",
                         help="Use uncertainty or not")
     parser.add_argument("--test", action="store_true",
                         help="To test the network.")
@@ -57,11 +63,16 @@ def main():
         model = LeNet(dropout=args.dropout)
 
         if use_uncertainty:
-            criterion = uncertainty_loss
+            if args.digamma:
+                criterion = edl_digamma_loss
+            if args.log:
+                criterion = edl_log_loss
+            if args.mse:
+                criterion = edl_mse_loss
         else:
             criterion = nn.CrossEntropyLoss()
 
-        optimizer = optim.Adam(model.parameters())
+        optimizer = optim.Adam(model.parameters(), lr=1e-3, weight_decay=0.005)
 
         exp_lr_scheduler = optim.lr_scheduler.StepLR(
             optimizer, step_size=7, gamma=0.1)
@@ -69,9 +80,30 @@ def main():
         device = get_device()
         model = model.to(device)
 
-        _, _ = train_model(model, dataloaders, num_classes, criterion,
-                           optimizer, scheduler=exp_lr_scheduler, num_epochs=num_epochs,
-                           device=device, uncertainty=use_uncertainty)
+        model, metrics = train_model(model, dataloaders, num_classes, criterion,
+                                     optimizer, scheduler=exp_lr_scheduler, num_epochs=num_epochs,
+                                     device=device, uncertainty=use_uncertainty)
+
+        state = {
+            "epoch": num_epochs,
+            "model_state_dict": model.state_dict(),
+            "optimizer_state_dict": optimizer.state_dict(),
+        }
+
+        if use_uncertainty:
+            if args.digamma:
+                torch.save(state, "./results/model_uncertainty_digamma.pt")
+                print("Saved: ./results/model_uncertainty_digamma.pt")
+            if args.log:
+                torch.save(state, "./results/model_uncertainty_log.pt")
+                print("Saved: ./results/model_uncertainty_log.pt")
+            if args.mse:
+                torch.save(state, "./results/model_uncertainty_mse.pt")
+                print("Saved: ./results/model_uncertainty_mse.pt")
+
+        else:
+            torch.save(state, "./results/model.pt")
+            print("Saved: ./results/model.pt")
 
     elif args.test:
         use_uncertainty = args.uncertainty
@@ -80,8 +112,17 @@ def main():
         optimizer = optim.Adam(model.parameters())
 
         if use_uncertainty:
-            checkpoint = torch.load("./results/uncertainty_model.pt")
-            filename = "./results/uncertainty_rotate.jpg"
+            if args.digamma:
+                checkpoint = torch.load(
+                    "./results/model_uncertainty_digamma.pt")
+                filename = "./results/rotate_uncertainty_digamma.jpg"
+            if args.log:
+                checkpoint = torch.load("./results/model_uncertainty_log.pt")
+                filename = "./results/rotate_uncertainty_log.jpg"
+            if args.mse:
+                checkpoint = torch.load("./results/model_uncertainty_mse.pt")
+                filename = "./results/rotate_uncertainty_mse.jpg"
+
         else:
             checkpoint = torch.load("./results/model.pt")
             filename = "./results/rotate.jpg"
@@ -93,27 +134,6 @@ def main():
 
         rotating_image_classification(
             model, digit_one, filename, uncertainty=use_uncertainty)
-
-        # n_epochs = 10
-        # learning_rate = 0.01
-        # momentum = 0.5
-        # log_interval = 10
-        # num_classes = 10
-
-        # # criterion = nn.CrossEntropyLoss()
-        # criterion = uncertainty_loss
-        # # criterion = F.nll_loss
-        # optimizer = optim.Adam(network.parameters())
-        # exp_lr_scheduler = optim.lr_scheduler.StepLR(
-        #     optimizer, step_size=7, gamma=0.1)
-
-        # device = get_device()
-        # network = network.to(device)
-
-        # model, metrics = train_model(network, dataloaders, num_classes, criterion,
-        #                              optimizer, scheduler=exp_lr_scheduler, num_epochs=50, device=device, uncertainty=True)
-
-        # # checkpoint = torch.load("./results/model.pt")
 
 
 if __name__ == "__main__":

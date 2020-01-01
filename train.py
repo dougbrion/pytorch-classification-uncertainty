@@ -3,6 +3,7 @@ import torch.nn as nn
 import copy
 import time
 from helpers import get_device, one_hot_embedding
+from losses import relu_evidence
 
 
 def train_model(model, dataloaders, num_classes, criterion, optimizer, scheduler=None,
@@ -55,12 +56,13 @@ def train_model(model, dataloaders, num_classes, criterion, optimizer, scheduler
                         y = y.to(device)
                         outputs = model(inputs)
                         _, preds = torch.max(outputs, 1)
-                        loss, evidence = criterion(
+                        loss = criterion(
                             outputs, y.float(), epoch, num_classes, 10, device)
+
                         match = torch.reshape(torch.eq(
                             preds, labels).float(), (-1, 1))
                         acc = torch.mean(match)
-
+                        evidence = relu_evidence(outputs)
                         alpha = evidence + 1
                         u = num_classes / torch.sum(alpha, dim=1, keepdim=True)
 
@@ -117,18 +119,5 @@ def train_model(model, dataloaders, num_classes, criterion, optimizer, scheduler
     # load best model weights
     model.load_state_dict(best_model_wts)
     metrics = (losses, accuracy)
-
-    state = {
-        "epoch": num_epochs,
-        "model_state_dict": model.state_dict(),
-        "optimizer_state_dict": optimizer.state_dict(),
-        "loss": epoch_loss,
-    }
-    if uncertainty:
-        torch.save(state, "./results/uncertainty_model.pt")
-        print("Saved: ./results/uncertainty_model.pt")
-    else:
-        torch.save(state, "./results/model.pt")
-        print("Saved: ./results/model.pt")
 
     return model, metrics

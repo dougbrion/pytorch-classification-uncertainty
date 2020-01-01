@@ -26,4 +26,4 @@ dataloaders = {
     "val": dataloader_val,
 }
 
-digit_one, _ = data_val[2]
+digit_one, _ = data_val[5]

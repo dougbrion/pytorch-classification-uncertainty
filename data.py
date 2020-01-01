@@ -3,14 +3,14 @@ from torchvision.datasets.mnist import MNIST
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 
-data_train = MNIST('./data/mnist',
+data_train = MNIST("./data/mnist",
                    download=True,
                    train=True,
                    transform=transforms.Compose([
                        transforms.Resize((28, 28)),
                        transforms.ToTensor()]))
 
-data_val = MNIST('./data/mnist',
+data_val = MNIST("./data/mnist",
                  train=False,
                  download=True,
                  transform=transforms.Compose([
@@ -26,4 +26,4 @@ dataloaders = {
     "val": dataloader_val,
 }
 
-digit_one, _ = data_val[5]
+digit_one, _ = data_val[2]

@@ -126,7 +126,9 @@ def train_model(model, dataloaders, num_classes, criterion, optimizer, scheduler
     }
     if uncertainty:
         torch.save(state, "./results/uncertainty_model.pt")
+        print("Saved: ./results/uncertainty_model.pt")
     else:
         torch.save(state, "./results/model.pt")
+        print("Saved: ./results/model.pt")
 
     return model, metrics

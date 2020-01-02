@@ -36,34 +36,65 @@ Code for this repository:
 
 ## 🏁 Demonstration <a name = "demonstration"></a>
 
-### Classification with softmax neural network
+### Classification with Softmax Cross Entropy Loss Neural Network
+
+The current standard for deep neural networks is to use the softmax operator to convert the continuous activations of the output layer to class probabilities.
 
 The following demonstrates how softmax based Deep Neural Networks fail when they encounter out-of-sample queries.
 
-The test accuracy after 50 epochs is around 98.9%. Now, we want to classify a rotating digit from MNIST dataset to see how this network does for the samples that are not from the training set distribution. The following lines of codes helps us to see it.
+The test accuracy for the network after 50 epochs is around 98.9%. Now, we want to classify a rotating digit from MNIST dataset to see how this network does for the samples that are not from the training set distribution.
+
+For small degrees of rotation, the image is correctly classified as a "1" with high probability values. However, when the image is rotated by a larger amount the classification probability computed using the softmax function is still high even though the samples have been misclassified.
 
 ![Image](./results/rotate.jpg)
 
-As shown above, a neural network trained to generate softmax probabilities fails significantly when it encounters a sample that is different from the training examples. The softmax forces neural network to pick one class, even though the object belongs to an unknown category. This is demonstrated when we rotate the digit one between 60 and 130 degrees.
+As shown above, a neural network trained to generate softmax probabilities fails significantly when it encounters a sample that is different from the training examples. The softmax forces neural network to pick one class, even though the object belongs to an unknown category. This is demonstrated when we rotate the digit one between 60 and 130 degrees. The network classifies the digit incorrectly as either a 5 or 7 while in this range, and with a high classification probability.
 
-### Classification with uncertainty using MSE based loss
+### Classification with uncertainty using Expected Mean Square Error
+
+Ideally, we want a network to be "unsure" while trying to classify these objects that belong to an unkown category. Making the network say, *I do not know*, can be achieved by assigning all belief masses to the whole frame.
 
 As described in the paper, a neural network can be trained to learn parameters of a Dirichlet distribution, instead of softmax probabilities. Dirichlet distributions with parameters  `α ≥ 1` behaves like a generative model for softmax probabilities (categorical distributions). It associates a likelihood value with each categorical distribution.
 
+<div align="center">
+Expected Mean Square Error
+
 ![Image](./results/rotate_uncertainty_mse.jpg)
+</div>
 
-The figure above indicates that the proposed approach generates much smaller amount of evidence for the misclassified samples than the correctly classified ones. The uncertainty of the misclassified samples are around 0.8, while it is around 0.1 for the correctly classified ones, both for training and testing sets. This means that the neural network is very uncertain for the misclassified samples and provides certain predictions only for the correctly classified ones. In other words, the neural network also predicts when it fails by assigning high uncertainty to its wrong predictions.
+The figure above indicates that the proposed approach generates much smaller amount of evidence for the misclassified samples than the correctly classified ones. The uncertainty of the misclassified samples is high, around 1.0, while it is around 0.2 for the correctly classified ones, both for training and testing sets. This means that the neural network is very uncertain for the misclassified samples and provides certain predictions only for the correctly classified ones. In other words, the neural network also predicts when it fails by assigning high uncertainty to its wrong predictions.
 
-### Classification with uncertainty using digamma based loss
+The network above is trained using Eq. 5 in the paper. This loss function 
+
+### Classification with uncertainty using Expected Cross Entropy
 
 In this section, we train neural network using the loss function described in Eq. 4 in the paper. This loss function is derived using the expected value of the cross entropy loss over the predicted Dirichlet distribution.
 
+<div align="center">
+Expected Cross Entropy
+
 ![Image](./results/rotate_uncertainty_digamma.jpg)
+</div>
+
 
 The figure above indicates that the neural network generates much more evidence for the correctly classified samples. As a result, it has a very low uncertainty (around zero) for the correctly classified samples, while the uncertainty is very high (around 0.7) for the misclassified samples.
 
-### Classification with uncertainty using log based loss
+### Classification with uncertainty using Negative Log of the Expected Likelihood
 
 In this section, we repeat our experiments using the loss function based on Eq. 3 in the paper.
 
+<div align="center">
+Negative Log of the Expected Likelihood
+
 ![Image](./results/rotate_uncertainty_log.jpg)
+</div>
+
+## Comparing in sample and out of sample classification
+
+Here you can see how the network responds to a completely random image, in this case of Master Yoda... The network has an uncertainty of 1.0 and has given equal probability to all classes. Comparing this to the "One" digit, we can see that the uncertainty for the in sample image is much lower at around 0.15 and that here is a high confidence of it being a one with a classification probability of approximately 0.86.
+
+![](./results/yoda.jpg) ![](./results/one.jpg)
+
+MNIST One Digit             |  Random Image of Yoda
+:-------------------------:|:-------------------------:
+![](./results/one.jpg)  |  ![](./results/yoda.jpg)

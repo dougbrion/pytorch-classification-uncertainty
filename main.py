@@ -10,11 +10,12 @@ from torch.autograd import Variable
 import numpy as np
 import argparse
 from matplotlib import pyplot as plt
+from PIL import Image
 
 from helpers import get_device, rotate_img, one_hot_embedding
 from data import dataloaders, digit_one
 from train import train_model
-from test import rotating_image_classification
+from test import rotating_image_classification, test_single_image
 from losses import edl_mse_loss, edl_digamma_loss, edl_log_loss, relu_evidence
 from lenet import LeNet
 
@@ -106,9 +107,11 @@ def main():
             print("Saved: ./results/model.pt")
 
     elif args.test:
-        use_uncertainty = args.uncertainty
 
+        use_uncertainty = args.uncertainty
+        device = get_device()
         model = LeNet()
+        model = model.to(device)
         optimizer = optim.Adam(model.parameters())
 
         if use_uncertainty:
@@ -134,6 +137,10 @@ def main():
 
         rotating_image_classification(
             model, digit_one, filename, uncertainty=use_uncertainty)
+
+        img = Image.open("./data/one.jpg").convert('L')
+
+        test_single_image(model, img, uncertainty=use_uncertainty)
 
 
 if __name__ == "__main__":

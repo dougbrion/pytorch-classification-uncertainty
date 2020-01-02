@@ -47,7 +47,12 @@ The test accuracy for the network after 50 epochs is around 98.9%. Now, we want 
 
 For small degrees of rotation, the image is correctly classified as a "1" with high probability values. However, when the image is rotated by a larger amount the classification probability computed using the softmax function is still high even though the samples have been misclassified.
 
-![Image](./results/rotate.jpg)
+<div align="center">
+ 
+![Standard Network without Uncertainty](./results/rotate.jpg)
+ 
+<b>Standard Network without Uncertainty</b>
+</div>
 
 As shown above, a neural network trained to generate softmax probabilities fails significantly when it encounters a sample that is different from the training examples. The softmax forces neural network to pick one class, even though the object belongs to an unknown category. This is demonstrated when we rotate the digit one between 60 and 130 degrees. The network classifies the digit incorrectly as either a 5 or 7 while in this range, and with a high classification probability.
 
@@ -58,9 +63,10 @@ Ideally, we want a network to be "unsure" while trying to classify these objects
 As described in the paper, a neural network can be trained to learn parameters of a Dirichlet distribution, instead of softmax probabilities. Dirichlet distributions with parameters  `α ≥ 1` behaves like a generative model for softmax probabilities (categorical distributions). It associates a likelihood value with each categorical distribution.
 
 <div align="center">
-Expected Mean Square Error
-
-![Image](./results/rotate_uncertainty_mse.jpg)
+  
+  ![Expected Mean Square Error](./results/rotate_uncertainty_mse.jpg)
+  
+  <b>Expected Mean Square Error</b>
 </div>
 
 The figure above indicates that the proposed approach generates much smaller amount of evidence for the misclassified samples than the correctly classified ones. The uncertainty of the misclassified samples is high, around 1.0, while it is around 0.2 for the correctly classified ones, both for training and testing sets. This means that the neural network is very uncertain for the misclassified samples and provides certain predictions only for the correctly classified ones. In other words, the neural network also predicts when it fails by assigning high uncertainty to its wrong predictions.
@@ -72,9 +78,10 @@ The network above is trained using Eq. 5 in the paper. This loss function
 In this section, we train neural network using the loss function described in Eq. 4 in the paper. This loss function is derived using the expected value of the cross entropy loss over the predicted Dirichlet distribution.
 
 <div align="center">
-Expected Cross Entropy
-
-![Image](./results/rotate_uncertainty_digamma.jpg)
+ 
+  ![Expected Cross Entropy](./results/rotate_uncertainty_digamma.jpg)
+  
+  <b>Expected Cross Entropy</b>
 </div>
 
 
@@ -85,20 +92,21 @@ The figure above indicates that the neural network generates much more evidence 
 In this section, we repeat our experiments using the loss function based on Eq. 3 in the paper.
 
 <div align="center">
-Negative Log of the Expected Likelihood
 
-![Image](./results/rotate_uncertainty_log.jpg)
+![Negative Log of the Expected Likelihood](./results/rotate_uncertainty_log.jpg)
+
+<b>Negative Log of the Expected Likelihood</b>
 </div>
 
 ## Comparing in sample and out of sample classification
 
 Here you can see how the network responds to a completely random image, in this case of Master Yoda... The network has an uncertainty of 1.0 and has given equal probability to all classes. Comparing this to the "One" digit, we can see that the uncertainty for the in sample image is much lower at around 0.15 and that here is a high confidence of it being a one with a classification probability of approximately 0.86.
 
-![](./results/yoda.jpg) ![](./results/one.jpg)
 
 MNIST One Digit             |  Random Image of Yoda
 :-------------------------:|:-------------------------:
 ![](./results/one.jpg)  |  ![](./results/yoda.jpg)
+
 
 ## 🎈 Usage <a name = "usage"></a>
 

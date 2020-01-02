@@ -7,13 +7,72 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from losses import relu_evidence
-from helpers import rotate_img, one_hot_embedding
+from helpers import rotate_img, one_hot_embedding, get_device
 
-# This method rotates an image counter-clockwise and classify it for different degress of rotation.
-# It plots the highest classification probability along with the class label for each rotation degree.
+
+def test_single_image(model, img, uncertainty=False, device=None):
+    if not device:
+        device = get_device()
+    num_classes = 10
+    trans = transforms.Compose([
+        transforms.Resize((28, 28)),
+        transforms.ToTensor()])
+    img_tensor = trans(img)
+    img_tensor.unsqueeze_(0)
+    img_variable = Variable(img_tensor)
+    img_variable = img_variable.to(device)
+
+    if uncertainty:
+        output = model(img_variable)
+        evidence = relu_evidence(output)
+        alpha = evidence + 1
+        uncertainty = num_classes / torch.sum(alpha, dim=1, keepdim=True)
+        _, preds = torch.max(output, 1)
+        prob = alpha / torch.sum(alpha, dim=1, keepdim=True)
+        output = output.flatten()
+        prob = prob.flatten()
+        preds = preds.flatten()
+        print("Predict:", preds[0])
+        print("Probs:", prob)
+        print("Uncertainty:", uncertainty)
+
+    else:
+
+        output = model(img_variable)
+        _, preds = torch.max(output, 1)
+        prob = F.softmax(output, dim=1)
+        output = output.flatten()
+        prob = prob.flatten()
+        preds = preds.flatten()
+        print("Predict:", preds[0])
+        print("Probs:", prob)
+
+    labels = np.arange(10)
+    fig = plt.figure(figsize=[6.2, 5])
+    fig, axs = plt.subplots(1, 2, gridspec_kw={"width_ratios": [1,  3]})
+
+    plt.title("Classified as: {}, Uncertainty: {}".format(
+        preds[0], uncertainty.item()))
+
+    axs[0].set_title("One")
+    axs[0].imshow(img, cmap="gray")
+    axs[0].axis("off")
+
+    axs[1].bar(labels, prob.cpu().detach().numpy(), width=0.5)
+    axs[1].set_xlim([0, 9])
+    axs[1].set_ylim([0, 1])
+    axs[1].set_xticks(np.arange(10))
+    axs[1].set_xlabel("Classes")
+    axs[1].set_ylabel("Classification Probability")
+
+    fig.tight_layout()
+
+    plt.savefig("./results/one.jpg")
 
 
 def rotating_image_classification(model, img, filename, uncertainty=False, threshold=0.5, device=None):
+    if not device:
+        device = get_device()
     num_classes = 10
     Mdeg = 180
     Ndeg = int(Mdeg / 10) + 1
@@ -58,8 +117,7 @@ def rotating_image_classification(model, img, filename, uncertainty=False, thres
             prob = prob.flatten()
             preds = preds.flatten()
             classifications.append(preds[0].item())
-        # one_hot = one_hot_embedding(preds[0])
-        # scores += one_hot.numpy()
+
         scores += prob.detach().cpu().numpy() >= threshold
         ldeg.append(deg)
         lp.append(prob.tolist())

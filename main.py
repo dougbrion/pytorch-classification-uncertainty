@@ -26,21 +26,21 @@ def main():
     parser.add_argument("--train", action="store_true",
                         help="To train the network.")
     parser.add_argument("--epochs", default=10, type=int,
-                        help="Number of epochs.")
+                        help="Desired number of epochs.")
     parser.add_argument("--dropout", action="store_true",
-                        help="Use dropout or not")
+                        help="Whether to use dropout or not.")
     parser.add_argument("--uncertainty", action="store_true",
-                        help="Use uncertainty or not")
+                        help="Use uncertainty or not.")
     parser.add_argument("--mse", action="store_true",
-                        help="Use uncertainty or not")
+                        help="Set this argument when using uncertainty. Sets loss function to Expected Mean Square Error.")
     parser.add_argument("--digamma", action="store_true",
-                        help="Use uncertainty or not")
+                        help="Set this argument when using uncertainty. Sets loss function to Expected Cross Entropy.")
     parser.add_argument("--log", action="store_true",
-                        help="Use uncertainty or not")
+                        help="Set this argument when using uncertainty. Sets loss function to Negative Log of the Expected Likelihood.")
     parser.add_argument("--test", action="store_true",
                         help="To test the network.")
     parser.add_argument("--examples", action="store_true",
-                        help="To show data.")
+                        help="To example MNIST data.")
     args = parser.parse_args()
 
     if args.examples:

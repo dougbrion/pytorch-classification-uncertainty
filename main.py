@@ -23,24 +23,26 @@ from lenet import LeNet
 def main():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--train", action="store_true",
-                        help="To train the network.")
+    mode_group = parser.add_mutually_exclusive_group(required=True)
+    mode_group.add_argument("--train", action="store_true",
+                            help="To train the network.")
+    mode_group.add_argument("--test", action="store_true",
+                            help="To test the network.")
+    mode_group.add_argument("--examples", action="store_true",
+                            help="To example MNIST data.")
     parser.add_argument("--epochs", default=10, type=int,
                         help="Desired number of epochs.")
     parser.add_argument("--dropout", action="store_true",
                         help="Whether to use dropout or not.")
     parser.add_argument("--uncertainty", action="store_true",
                         help="Use uncertainty or not.")
-    parser.add_argument("--mse", action="store_true",
-                        help="Set this argument when using uncertainty. Sets loss function to Expected Mean Square Error.")
-    parser.add_argument("--digamma", action="store_true",
-                        help="Set this argument when using uncertainty. Sets loss function to Expected Cross Entropy.")
-    parser.add_argument("--log", action="store_true",
-                        help="Set this argument when using uncertainty. Sets loss function to Negative Log of the Expected Likelihood.")
-    parser.add_argument("--test", action="store_true",
-                        help="To test the network.")
-    parser.add_argument("--examples", action="store_true",
-                        help="To example MNIST data.")
+    uncertainty_type_group = parser.add_mutually_exclusive_group()
+    uncertainty_type_group.add_argument("--mse", action="store_true",
+                                        help="Set this argument when using uncertainty. Sets loss function to Expected Mean Square Error.")
+    uncertainty_type_group.add_argument("--digamma", action="store_true",
+                                        help="Set this argument when using uncertainty. Sets loss function to Expected Cross Entropy.")
+    uncertainty_type_group.add_argument("--log", action="store_true",
+                                        help="Set this argument when using uncertainty. Sets loss function to Negative Log of the Expected Likelihood.")
     args = parser.parse_args()
 
     if args.examples:
@@ -66,10 +68,13 @@ def main():
         if use_uncertainty:
             if args.digamma:
                 criterion = edl_digamma_loss
-            if args.log:
+            elif args.log:
                 criterion = edl_log_loss
-            if args.mse:
+            elif args.mse:
                 criterion = edl_mse_loss
+            else:
+                parser.error(
+                    "--uncertainty requires --mse, --log or --digamma.")
         else:
             criterion = nn.CrossEntropyLoss()
 

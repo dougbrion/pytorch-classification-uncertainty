@@ -119,7 +119,7 @@ pip install -r requirements.txt
 
 The are various arguments available for training and testing the network in addition to showing example data. When training or testing with uncertainty provide the `--uncertainty` argument in addition to one of the following for loss: `--mse`, `--digamma`, `--log`.
 
-```shell
+```
 python main.py --help
 
 usage: main.py [-h] [--train] [--epochs EPOCHS] [--dropout] [--uncertainty]

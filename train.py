@@ -52,7 +52,7 @@ def train_model(model, dataloaders, num_classes, criterion, optimizer, scheduler
                 with torch.set_grad_enabled(phase == "train"):
 
                     if uncertainty:
-                        y = one_hot_embedding(labels)
+                        y = one_hot_embedding(labels, num_classes)
                         y = y.to(device)
                         outputs = model(inputs)
                         _, preds = torch.max(outputs, 1)

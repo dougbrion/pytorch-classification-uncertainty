@@ -6,8 +6,17 @@ from helpers import get_device, one_hot_embedding
 from losses import relu_evidence
 
 
-def train_model(model, dataloaders, num_classes, criterion, optimizer, scheduler=None,
-                num_epochs=25, device=None, uncertainty=False):
+def train_model(
+    model,
+    dataloaders,
+    num_classes,
+    criterion,
+    optimizer,
+    scheduler=None,
+    num_epochs=25,
+    device=None,
+    uncertainty=False,
+):
 
     since = time.time()
 
@@ -32,7 +41,7 @@ def train_model(model, dataloaders, num_classes, criterion, optimizer, scheduler
                 model.train()  # Set model to training mode
             else:
                 print("Validating...")
-                model.eval()   # Set model to evaluate mode
+                model.eval()  # Set model to evaluate mode
 
             running_loss = 0.0
             running_corrects = 0.0
@@ -57,10 +66,10 @@ def train_model(model, dataloaders, num_classes, criterion, optimizer, scheduler
                         outputs = model(inputs)
                         _, preds = torch.max(outputs, 1)
                         loss = criterion(
-                            outputs, y.float(), epoch, num_classes, 10, device)
+                            outputs, y.float(), epoch, num_classes, 10, device
+                        )
 
-                        match = torch.reshape(torch.eq(
-                            preds, labels).float(), (-1, 1))
+                        match = torch.reshape(torch.eq(preds, labels).float(), (-1, 1))
                         acc = torch.mean(match)
                         evidence = relu_evidence(outputs)
                         alpha = evidence + 1
@@ -69,9 +78,11 @@ def train_model(model, dataloaders, num_classes, criterion, optimizer, scheduler
                         total_evidence = torch.sum(evidence, 1, keepdim=True)
                         mean_evidence = torch.mean(total_evidence)
                         mean_evidence_succ = torch.sum(
-                            torch.sum(evidence, 1, keepdim=True) * match) / torch.sum(match + 1e-20)
+                            torch.sum(evidence, 1, keepdim=True) * match
+                        ) / torch.sum(match + 1e-20)
                         mean_evidence_fail = torch.sum(
-                            torch.sum(evidence, 1, keepdim=True) * (1 - match)) / (torch.sum(torch.abs(1 - match)) + 1e-20)
+                            torch.sum(evidence, 1, keepdim=True) * (1 - match)
+                        ) / (torch.sum(torch.abs(1 - match)) + 1e-20)
 
                     else:
                         outputs = model(inputs)
@@ -91,8 +102,7 @@ def train_model(model, dataloaders, num_classes, criterion, optimizer, scheduler
                     scheduler.step()
 
             epoch_loss = running_loss / len(dataloaders[phase].dataset)
-            epoch_acc = running_corrects.double(
-            ) / len(dataloaders[phase].dataset)
+            epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)
 
             losses["loss"].append(epoch_loss)
             losses["phase"].append(phase)
@@ -101,8 +111,11 @@ def train_model(model, dataloaders, num_classes, criterion, optimizer, scheduler
             accuracy["epoch"].append(epoch)
             accuracy["phase"].append(phase)
 
-            print("{} loss: {:.4f} acc: {:.4f}".format(
-                phase.capitalize(), epoch_loss, epoch_acc))
+            print(
+                "{} loss: {:.4f} acc: {:.4f}".format(
+                    phase.capitalize(), epoch_loss, epoch_acc
+                )
+            )
 
             # deep copy the model
             if phase == "val" and epoch_acc > best_acc:
@@ -112,8 +125,11 @@ def train_model(model, dataloaders, num_classes, criterion, optimizer, scheduler
         print()
 
     time_elapsed = time.time() - since
-    print("Training complete in {:.0f}m {:.0f}s".format(
-        time_elapsed // 60, time_elapsed % 60))
+    print(
+        "Training complete in {:.0f}m {:.0f}s".format(
+            time_elapsed // 60, time_elapsed % 60
+        )
+    )
     print("Best val Acc: {:4f}".format(best_acc))
 
     # load best model weights

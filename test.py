@@ -2,21 +2,20 @@ import torch
 from torch.autograd import Variable
 import torch.nn.functional as F
 import torchvision.transforms as transforms
-
+import os
 import numpy as np
 from matplotlib import pyplot as plt
-
+from PIL import Image
 from losses import relu_evidence
 from helpers import rotate_img, one_hot_embedding, get_device
 
 
-def test_single_image(model, img, uncertainty=False, device=None):
+def test_single_image(model, img_path, uncertainty=False, device=None):
+    img = Image.open(img_path).convert("L")
     if not device:
         device = get_device()
     num_classes = 10
-    trans = transforms.Compose([
-        transforms.Resize((28, 28)),
-        transforms.ToTensor()])
+    trans = transforms.Compose([transforms.Resize((28, 28)), transforms.ToTensor()])
     img_tensor = trans(img)
     img_tensor.unsqueeze_(0)
     img_variable = Variable(img_tensor)
@@ -49,10 +48,9 @@ def test_single_image(model, img, uncertainty=False, device=None):
 
     labels = np.arange(10)
     fig = plt.figure(figsize=[6.2, 5])
-    fig, axs = plt.subplots(1, 2, gridspec_kw={"width_ratios": [1,  3]})
+    fig, axs = plt.subplots(1, 2, gridspec_kw={"width_ratios": [1, 3]})
 
-    plt.title("Classified as: {}, Uncertainty: {}".format(
-        preds[0], uncertainty.item()))
+    plt.title("Classified as: {}, Uncertainty: {}".format(preds[0], uncertainty.item()))
 
     axs[0].set_title("One")
     axs[0].imshow(img, cmap="gray")
@@ -67,10 +65,12 @@ def test_single_image(model, img, uncertainty=False, device=None):
 
     fig.tight_layout()
 
-    plt.savefig("./results/one.jpg")
+    plt.savefig("./results/{}".format(os.path.basename(img_path)))
 
 
-def rotating_image_classification(model, img, filename, uncertainty=False, threshold=0.5, device=None):
+def rotating_image_classification(
+    model, img, filename, uncertainty=False, threshold=0.5, device=None
+):
     if not device:
         device = get_device()
     num_classes = 10
@@ -88,7 +88,7 @@ def rotating_image_classification(model, img, filename, uncertainty=False, thres
 
         nimg = np.clip(a=nimg, a_min=0, a_max=1)
 
-        rimgs[:, i*28:(i+1)*28] = nimg
+        rimgs[:, i * 28 : (i + 1) * 28] = nimg
         trans = transforms.ToTensor()
         img_tensor = trans(nimg)
         img_tensor.unsqueeze_(0)
@@ -125,7 +125,7 @@ def rotating_image_classification(model, img, filename, uncertainty=False, thres
     labels = np.arange(10)[scores[0].astype(bool)]
     lp = np.array(lp)[:, labels]
     c = ["black", "blue", "red", "brown", "purple", "cyan"]
-    marker = ["s", "^", "o"]*2
+    marker = ["s", "^", "o"] * 2
     labels = labels.tolist()
     fig = plt.figure(figsize=[6.2, 5])
     fig, axs = plt.subplots(3, gridspec_kw={"height_ratios": [4, 1, 12]})
@@ -139,7 +139,7 @@ def rotating_image_classification(model, img, filename, uncertainty=False, thres
 
     print(classifications)
 
-    axs[0].set_title("Rotated \"1\" Digit Classifications")
+    axs[0].set_title('Rotated "1" Digit Classifications')
     axs[0].imshow(1 - rimgs, cmap="gray")
     axs[0].axis("off")
     plt.pause(0.001)

@@ -158,9 +158,9 @@ def main():
 
         model.eval()
 
-        rotating_image_classification(
-            model, digit_one, filename, uncertainty=use_uncertainty
-        )
+        # rotating_image_classification(
+        #     model, digit_one, filename, uncertainty=use_uncertainty
+        # )
 
         test_single_image(model, "./data/one.jpg", uncertainty=use_uncertainty)
         test_single_image(model, "./data/yoda.jpg", uncertainty=use_uncertainty)
